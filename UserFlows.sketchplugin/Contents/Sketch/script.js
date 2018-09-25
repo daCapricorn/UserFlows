@@ -1,3 +1,6 @@
+var Document = require('sketch/dom').Document
+var Flow = require('sketch/dom').Flow
+
 var kPluginDomain = "com.abynim.sketchplugins.userflows";
 var kKeepOrganizedKey = "com.abynim.userflows.keepOrganized";
 var kIncludePrototypingKey = "com.abynim.userflows.includePrototypingInExport";
@@ -997,6 +1000,12 @@ var generateFlowWithSettings = function(context, settings, initialArtboard, sour
 		}
 
 		sourcePage.addLayers([screenLayer]);
+
+		var layer = Document.fromNative(doc).getLayerWithID(screenLayer.objectID())
+		if (layer) {
+			layer.flow = { targetId: artboard.objectID(), animationType: Flow.AnimationType.none }
+		}
+
 		screenLayer.absoluteRect().setX(artboard.absoluteRect().x());
 		screenLayer.absoluteRect().setY(artboard.absoluteRect().y());
 		screenLayer.absoluteRect().setWidth(artboard.absoluteRect().width());
