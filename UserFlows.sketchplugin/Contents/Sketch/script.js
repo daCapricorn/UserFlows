@@ -1,4 +1,4 @@
-var Document = require('sketch/dom').Document
+var Sketch = require('sketch/dom')
 var Flow = require('sketch/dom').Flow
 
 var kPluginDomain = "com.abynim.sketchplugins.userflows";
@@ -1017,7 +1017,7 @@ var generateFlowWithSettings = function(context, settings, initialArtboard, sour
 
 		sourcePage.addLayers([screenLayer]);
 
-		var layer = Document.fromNative(doc).getLayerWithID(screenLayer.objectID())
+		var layer = Sketch.fromNative(screenLayer)
 		if (layer) {
 			layer.flow = { targetId: artboard.objectID(), animationType: Flow.AnimationType.none }
 		}
@@ -1103,6 +1103,7 @@ var generateFlowWithSettings = function(context, settings, initialArtboard, sour
 				var flowConnections = detachedArtboard.valueForKeyPath("children.@distinctUnionOfObjects.flow");
 				var loop = flowConnections.objectEnumerator(), flowConnection, dropPointX, dropPointY;
 
+				var dropPointYOffset = -30;
 				while (flowConnection = loop.nextObject()) {
 					
 					linkLayer = flowConnection.sendingLayer();
@@ -1129,9 +1130,11 @@ var generateFlowWithSettings = function(context, settings, initialArtboard, sour
 
 						if(connection.linkIsCrossPage) {
 							dropPointX = artboard.absoluteRect().x() + artboard.absoluteRect().width() + (50*exportScale);
-							dropPointY = artboard.absoluteRect().y() - (30*exportScale);
+							dropPointY = artboard.absoluteRect().y() + (dropPointYOffset * exportScale);
+							dropPointYOffset += 60;
 
 							connection.destinationRect = CGRectMake(dropPointX, dropPointY, 10, 10);
+							connection.destinationArtboardID = destinationArtboard.objectID();
 							connection.artboardName = destinationArtboard.name();
 							connection.artboardParentName = destinationArtboard.parentPage().name();
 
@@ -1878,6 +1881,11 @@ var drawConnections = function(connections, parent, exportScale, labelColor, sha
 			artboardNameLabel.absoluteRect().setY(pageNameLabel.absoluteRect().y() + pageNameLabel.absoluteRect().height() + 3);
 
 			parent.addLayers([linkBG, pageNameLabel, artboardNameLabel]);
+
+			var layer = Sketch.fromNative(linkBG);
+			if (layer && connection.destinationArtboardID) {
+				layer.flow = { targetId: connection.destinationArtboardID, animationType: Flow.AnimationType.none }
+			}
 
 			connectionLayers.push(linkBG);
 			connectionLayers.push(pageNameLabel);
